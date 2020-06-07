@@ -2,7 +2,9 @@ import React from 'react'
 
 import Card from '../components/card'
 import FormGroup from '../components/form-group'
-
+import UsuarioService from '../app/service/usuarioService'
+import LocalStorageService from '../app/service/localstorageService'
+import { mensagemErro } from '../components/toastr'
 
 class login extends React.Component {
 
@@ -11,14 +13,25 @@ class login extends React.Component {
         senha: ''
     }
 
+    constructor(){
+        super()
+        this.service = new UsuarioService()
+    }
+
     entrar = () => {
-        console.log('Email: ', this.state.usuario)
-        console.log('Senha: ', this.state.senha)
+        this.service.autenticar({
+            usuario: this.state.usuario,
+            senha: this.state.senha
+        }).then( response => {
+            LocalStorageService.adicionarItem('_usuario_logado', response.data)
+            this.props.history.push('/home')
+        }).catch( erro => {
+            mensagemErro(erro.response.data)
+        })
     }
 
     render(){
         return (
-        <div className="container">
             <div className="row">
                 <div className="col-md-6" style={ {position : 'relative', left : '300px'} }>
                     <div className="bs-docs-section">
@@ -27,21 +40,21 @@ class login extends React.Component {
                                 <div className="col-lg-12">
                                     <div className="bs-component">
                                         <fieldset>
-                                            <FormGroup label="Usuário: *" htmlFor="inputUsuario1">
-                                                <input type="usuario"
+                                            <FormGroup label="Usuário: *" htmlFor="inputUsuario">
+                                                <input type="text"
                                                     value={this.state.usuario}
                                                     onChange={e => this.setState({usuario: e.target.value})}
                                                     className="form-control" 
-                                                    id="inputUsuario1" 
+                                                    id="inputUsuario" 
                                                     aria-describedby="usuarioHelp" 
                                                     placeholder="Digite o Usuário" />
                                             </FormGroup>
-                                            <FormGroup label="Senha: *" htmlFor="inputPassword1">
+                                            <FormGroup label="Senha: *" htmlFor="inputPassword">
                                                 <input type="password" 
                                                     value={this.state.senha}
                                                     onChange={e => this.setState({senha: e.target.value})}
                                                     className="form-control" 
-                                                    id="inputPassword1" 
+                                                    id="inputPassword" 
                                                     placeholder="Password" />
                                             </FormGroup>
                                             <button onClick={this.entrar} className="btn btn-success">Entrar</button>
@@ -53,7 +66,6 @@ class login extends React.Component {
                     </div>
                 </div>
             </div>
-        </div>
         )
     }
 }
