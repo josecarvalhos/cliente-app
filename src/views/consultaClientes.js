@@ -5,24 +5,29 @@ import Card from '../components/card'
 import ClientesTable from '../views/clientesTable'
 import ClienteService from '../app/service/clienteService'
 import FormGroup from '../components/form-group'
-import { mensagemSucesso, mensagemErro } from '../components/toastr'
 import {Dialog} from 'primereact/dialog'
 import {Button} from 'primereact/button'
-
-
+import * as messages from '../components/toastr'
+import LocalStorageService from '../app/service/localstorageService'
 
 class ConsultaClientes extends React.Component{
 
     state = {
+        usurioLogado: LocalStorageService.obterItem('_usuario_logado'),
         cpf: '',
         showConfirmDialog: false,
         clienteDeletar: {},
         clientes: []
+
     }
 
     constructor(){
         super()
         this.service = new ClienteService()
+    }
+
+    componentDidMount(){
+        this.buscar()
     }
 
     buscar = () => {
@@ -35,11 +40,11 @@ class ConsultaClientes extends React.Component{
             .then( resposta => {
                 this.setState({ clientes: resposta.data })
             }).catch(error => {
-                mensagemErro(error.response.data)
+                messages.mensagemErro(error.response.data)
             })
     }
 
-    cadastrar = () => {
+    prepararFormularioCadastra = () => {
         this.props.history.push('/cadastro-cliente')
     }
 
@@ -63,9 +68,9 @@ class ConsultaClientes extends React.Component{
                 const index = clientes.indexOf(this.state.clienteDeletar)
                 clientes.splice(index, 1)
                 this.setState( {clientes: clientes, showConfirmDialog: false} )
-                mensagemSucesso('Cliente deletado com sucesso!')
+                messages.mensagemSucesso('Cliente deletado com sucesso!')
             }).catch(error => {
-                mensagemErro('Ocorreu um erro ao deletar o cliente.')
+                messages.mensagemErro('Ocorreu um erro ao deletar o cliente.')
             })
     }
 
@@ -92,10 +97,18 @@ class ConsultaClientes extends React.Component{
                                     placeholder="Digite o CPF" />
                             </FormGroup>
                             <button onClick={this.buscar} type="button" className="btn btn-success">Buscar</button>
-                            <button onClick={this.cadastrar} type="button" className="btn btn-danger">Cadastrar</button>   
+                            { this.state.usurioLogado.perfil == 'comum' ? 
+                                (
+                                    ''
+                                ) : (
+                                    <button onClick={this.prepararFormularioCadastra} type="button" className="btn btn-danger">Cadastrar</button>   
+                                )
+
+                            }
                         </div>
                     </div>
                 </div>
+                
                 <br />
                 <div className="row">
                     <div className="col-md-12">

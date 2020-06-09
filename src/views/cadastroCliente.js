@@ -3,10 +3,11 @@ import React from 'react'
 import { withRouter } from 'react-router-dom'
 import Card from '../components/card'
 import FormGroup from '../components/form-group'
-import { mensagemSucesso, mensagemErro } from '../components/toastr'
 import ClienteService from '../app/service/clienteService'
 import SelectMenu from '../components/selectMenu'
-import {cpfMask} from '../components/mask'
+import * as messages from '../components/toastr'
+/*import {cpfMask} from '../components/mask'*/
+
 
 class CadastroCliente extends React.Component {
 
@@ -18,7 +19,8 @@ class CadastroCliente extends React.Component {
         bairro: '',
         cidade: '',
         uf: '',
-        complemento: ''
+        complemento: '',
+        atualizado: false
 
     }
 
@@ -30,6 +32,13 @@ class CadastroCliente extends React.Component {
     constructor(){
         super()
         this.service = new ClienteService()
+    }
+
+    handleChange = (event) => {
+        const value = event.target.value
+        const name = event.target.name
+
+        this.setState({ [name]: value })
     }
 
     validar(){
@@ -75,51 +84,61 @@ class CadastroCliente extends React.Component {
         if(params.id){
             this.service.obterPorId(params.id)
                 .then(response => {
-                    this.setState({...response.data})
+                    this.setState({...response.data, atualizado: true})
                 }).catch(erros => {
-                    mensagemErro(erros.response.data)
+                    messages.mensagemErro(erros.response.data)
                 })
         }
     }
 
-    cadastrar = () => {
+    submit = () => {
         const msgs = this.validar()
 
         if(msgs && msgs.length > 0){
             msgs.forEach( (msg, index) => {
-                mensagemErro(msg)
+                messages.mensagemErro(msg)
             })
             return false
         }
 
-        const cliente = {
-            nome: this.state.nome,
-            cpf: this.state.cpf,
-            cep: this.state.cep,
-            logradouro: this.state.logradouro,
-            bairro: this.state.bairro,
-            cidade: this.state.cidade,
-            uf: this.state.uf,
-            complemento: this.state.complemento
-        }
+        const { nome, cpf, cep, logradouro, bairro, cidade, uf, complemento } = this.state
+        const cliente = { nome, cpf, cep, logradouro, bairro, cidade, uf, complemento }
 
         this.service.salvar(cliente)
             .then( response => {
-                mensagemSucesso('Cliente cadastrado com sucesso!')
+                messages.mensagemSucesso('Cliente cadastrado com sucesso!')
                 this.props.history.push('/consulta-clientes')
             }).catch(error => {
-                mensagemErro(error.response.data)
+                messages.mensagemErro(error.response.data)
             })
     }
 
-    cancelar = () => {
-        this.props.history.push('/consulta-clientes')
+    atalizar = () => {
+        const msgs = this.validar()
+
+        if(msgs && msgs.length > 0){
+            msgs.forEach( (msg, index) => {
+                messages.mensagemErro(msg)
+            })
+            return false
+        }
+
+        const { id, nome, cpf, cep, logradouro, bairro, cidade, uf, complemento } = this.state
+        const cliente = { id, nome, cpf, cep, logradouro, bairro, cidade, uf, complemento }
+
+        this.service.atualizar(cliente)
+            .then( response => {
+                this.props.history.push('/consulta-clientes')
+                messages.mensagemSucesso('Cliente atualizado com sucesso!')
+            }).catch(error => {
+                messages.mensagemErro(error.response.data)
+            })
     }
 
     render(){
         const ufs = this.service.obterUfs()
         return (
-            <Card title="Cadastro de Cliente">
+            <Card title={this.state.atualizado ? 'Atualização de Cliente' : 'Cadastro de Cliente'}>
                  <div className="row">
                     <div className="col-md-4">
                         <FormGroup label="CPF: *" htmlFor="inputCpf">
@@ -129,7 +148,7 @@ class CadastroCliente extends React.Component {
                                 maxLength='14'
                                 name="cpf"
                                 value={this.state.cpf}
-                                onChange={e => this.setState({cpf: cpfMask(e.target.value)})} />
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
                     <div className="col-md-8">
@@ -138,7 +157,8 @@ class CadastroCliente extends React.Component {
                                 id="inputNome"
                                 className="form-control" 
                                 name="nome"
-                                onChange={e => this.setState({nome: e.target.value})} />
+                                value={this.state.nome}
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
                 </div>
@@ -150,7 +170,8 @@ class CadastroCliente extends React.Component {
                                 id="inputCep"
                                 className="form-control" 
                                 name="cep"
-                                onChange={e => this.setState({cep: e.target.value})} />
+                                value={this.state.cep}
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
                     <div className="col-md-8">
@@ -159,7 +180,8 @@ class CadastroCliente extends React.Component {
                                 id="inputLogradouro"
                                 className="form-control" 
                                 name="logradouro"
-                                onChange={e => this.setState({logradouro: e.target.value})} />
+                                value={this.state.logradouro}
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
                 </div>
@@ -172,7 +194,8 @@ class CadastroCliente extends React.Component {
                                 id="inputBairro"
                                 className="form-control" 
                                 name="bairro"
-                                onChange={e => this.setState({bairro: e.target.value})} />
+                                value={this.state.bairro}
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
 
@@ -182,7 +205,8 @@ class CadastroCliente extends React.Component {
                                 id="inputCidade"
                                 className="form-control" 
                                 name="cidade"
-                                onChange={e => this.setState({cidade: e.target.value})} />
+                                value={this.state.cidade}
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
                 </div>
@@ -191,9 +215,10 @@ class CadastroCliente extends React.Component {
                     <div className="col-md-4">
                         <FormGroup htmlFor="inputUf" label="UF: *">
                             <SelectMenu id="inputUf"
-                                value={this.state.uf}
-                                onChange={e => this.setState({ uf: e.target.value })}
                                 className="form-control" 
+                                name="uf"
+                                value={this.state.uf}
+                                onChange={this.handleChange}
                                 lista={ufs} />
                         </FormGroup>
 
@@ -204,12 +229,24 @@ class CadastroCliente extends React.Component {
                                 id="inputComplemento"
                                 className="form-control" 
                                 name="complemento"
-                                onChange={e => this.setState({complemento: e.target.value})} />
+                                value={this.state.complemento}
+                                onChange={this.handleChange} />
                         </FormGroup>
                     </div>
                 </div>
-                <button onClick={this.cadastrar} className="btn btn-success">Salvar</button>
-                <button onClick={this.cancelar} className="btn btn-danger">Cancelar</button>
+                <div className="row">
+                    <div className="col-md-6">
+                        { this.state.atualizado ? 
+                            (
+                                <button onClick={this.atalizar} className="btn btn-success">Atualizar</button>
+                            ) : (
+                                <button onClick={this.submit} className="btn btn-success">Salvar</button>
+                            )
+
+                        }
+                        <button onClick={e => this.props.history.push('/consulta-clientes')} className="btn btn-danger">Cancelar</button>
+                    </div>
+                </div>
             </Card>
         )
     }

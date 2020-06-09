@@ -1,4 +1,7 @@
 import React from 'react'
+import LocalStorageService from '../app/service/localstorageService'
+
+export const usurioLogado = LocalStorageService.obterItem('_usuario_logado')
 
 export default props => {
 
@@ -13,14 +16,21 @@ export default props => {
                 <td>{cliente.cidade}</td>
                 <td>{cliente.uf}</td>
                 <td>{cliente.complemento}</td>
-                <td>
-                    <button type="button" 
-                        className="btn btn-primary" 
-                        onClick={e => props.editAction(cliente.id)}>Editar</button>
-                    <button type="button" 
-                    className="btn btn-danger"
-                    onClick={e => props.deleteAction(cliente)}>Deletar</button>
-                </td>
+                { usurioLogado.perfil === 'comum' ? 
+                    (
+                        <td></td>
+                    ) : (
+                        <td>
+                            <button type="button"
+                                className="btn btn-primary" 
+                                onClick={e => props.editAction(cliente.id)}>Editar</button>
+                            <button type="button" 
+                            className="btn btn-danger"
+                            onClick={e => props.deleteAction(cliente)}>Deletar</button>
+                        </td> 
+                    )
+
+                }
             </tr>
         )
     })
@@ -37,6 +47,7 @@ export default props => {
                     <th scope="col">Cidade</th>
                     <th scope="col">UF</th>
                     <th scope="col">Complemento</th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
             <tbody>
